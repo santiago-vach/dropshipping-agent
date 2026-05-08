@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ML Dropshipping Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f2;--bg2:#fff;--bg3:#f0efe9;
+  --border:#e2e0d8;--border2:#ccc9be;
+  --text:#1a1a18;--muted:#888880;--dim:#bbb8ae;
+  --yellow:#ffe234;--yellow2:#f5d800;
+  --accent:#1a1a18;
+  --green:#1a7a4a;--green-bg:#e8f5ee;
+  --red:#c0392b;--red-bg:#fdf0ee;
+  --blue:#1a4fa0;--blue-bg:#eaf0fb;
+  --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans)}
+body{padding:0;margin:0}
+
+.shell{max-width:780px;margin:0 auto;padding:28px 24px}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-badge{background:var(--yellow);color:var(--accent);font-family:var(--mono);font-size:11px;font-weight:500;padding:5px 10px;border-radius:4px;letter-spacing:0.06em}
+.logo-title{font-size:13px;color:var(--muted);font-family:var(--mono)}
+.status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#1a7a4a}
+
+.tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--bg3);padding:4px;border-radius:8px;border:1px solid var(--border)}
+.tab{flex:1;padding:9px 8px;font-size:12px;font-family:var(--mono);text-align:center;border-radius:5px;cursor:pointer;border:none;background:none;color:var(--muted);transition:all 0.15s;letter-spacing:0.03em}
+.tab.active{background:var(--bg2);color:var(--text);border:1px solid var(--border)}
+.tab:hover:not(.active){color:var(--text)}
+
+.panel{display:none}
+.panel.active{display:block}
+
+.field{margin-bottom:14px}
+.label{font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:0.08em;margin-bottom:5px;display:block}
+input,textarea,select{
+  width:100%;background:var(--bg2);border:1px solid var(--border);
+  border-radius:6px;padding:10px 14px;font-family:var(--sans);
+  font-size:14px;color:var(--text);outline:none;
+  transition:border-color 0.2s;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--border2)}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+select{cursor:pointer}
+
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.btn{
+  padding:11px 20px;font-family:var(--mono);font-size:12px;font-weight:500;
+  border-radius:6px;cursor:pointer;border:none;letter-spacing:0.05em;
+  transition:all 0.15s;
+}
+.btn-primary{background:var(--yellow);color:var(--accent)}
+.btn-primary:hover{background:var(--yellow2)}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-full{width:100%;padding:12px}
+
+.loading{display:none;padding:24px;text-align:center}
+.spin{font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:0.08em}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--yellow2);margin-right:8px;animation:blink 0.9s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+.result-box{display:none;margin-top:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.result-header{padding:12px 16px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:0.08em;display:flex;align-items:center;justify-content:space-between}
+.result-body{padding:18px}
+
+.field-out{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.field-out:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.field-out-label{font-size:10px;font-family:var(--mono);color:var(--dim);letter-spacing:0.1em;margin-bottom:6px}
+.field-out-val{font-size:14px;color:var(--text);line-height:1.6;font-family:var(--sans)}
+.field-out-val.mono{font-family:var(--mono);font-size:13px}
+
+.copy-btn{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--muted);transition:all 0.1s}
+.copy-btn:hover{background:var(--bg3);color:var(--text)}
+.copy-btn.copied{color:var(--green);border-color:var(--green)}
+
+.score-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.score-num{font-size:36px;font-weight:500;font-family:var(--mono);line-height:1}
+.score-label{font-size:12px;color:var(--muted)}
+.score-bar-bg{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:3px;transition:width 0.6s ease}
+
+.badge{display:inline-block;font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:20px;margin:2px}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+.badge-neutral{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+.tip{font-size:12px;color:var(--muted);font-family:var(--sans);background:var(--bg3);padding:10px 14px;border-radius:6px;border-left:3px solid var(--yellow2);margin-top:14px;line-height:1.5}
+
+.err{font-size:13px;color:var(--red);padding:12px 0;display:none;font-family:var(--sans)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-badge">ML AGENT</div>
+      <span class="logo-title">Dropshipping Assistant</span>
+    </div>
+    <div class="status"><span class="status-dot"></span>activo</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('listing')">01 · Listing Optimizer</button>
+    <button class="tab" onclick="switchTab('preguntas')">02 · Respuestas</button>
+    <button class="tab" onclick="switchTab('analisis')">03 · Análisis de Producto</button>
+  </div>
+
+  <!-- PANEL 1: LISTING OPTIMIZER -->
+  <div class="panel active" id="panel-listing">
+    <div class="field">
+      <label class="label">NOMBRE DEL PRODUCTO</label>
+      <input id="l-nombre" type="text" placeholder="ej. Organizador de cajones con divisores"/>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label class="label">CATEGORÍA</label>
+        <select id="l-categoria">
+          <option value="">Selecciona...</option>
+          <option>Hogar y Muebles</option>
+          <option>Mascotas</option>
+          <option>Cocina</option>
+          <option>Jardín</option>
+          <option>Bebés y Niños</option>
+          <option>Deportes</option>
+          <option>Belleza y Cuidado Personal</option>
+          <option>Oficina</option>
+          <option>Electrónica</option>
+          <option>Otra</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="label">PRECIO DE VENTA (MXN)</label>
+        <input id="l-precio" type="number" placeholder="350"/>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">CARACTERÍSTICAS PRINCIPALES (separa con comas)</label>
+      <textarea id="l-features" placeholder="ej. material plástico resistente, 6 divisores, color gris, medidas 30x20cm, apto para cualquier cajón"></textarea>
+    </div>
+    <div class="field">
+      <label class="label">DIFERENCIAL VS COMPETENCIA (opcional)</label>
+      <input id="l-diferencial" type="text" placeholder="ej. set de 3 piezas, envío gratis, garantía 30 días"/>
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-listing" onclick="runListing()">GENERAR LISTING OPTIMIZADO</button>
+    <div class="loading" id="load-listing"><span class="pulse"></span><span class="spin" id="load-listing-txt">Generando...</span></div>
+    <div class="err" id="err-listing">Error al conectar. Intenta de nuevo.</div>
+
+    <div class="result-box" id="res-listing">
+      <div class="result-header"><span>LISTING GENERADO PARA MERCADO LIBRE</span></div>
+      <div class="result-body" id="res-listing-body"></div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: RESPUESTAS -->
+  <div class="panel" id="panel-preguntas">
+    <div class="tip">Pega aquí la pregunta exacta que te hizo un comprador en ML. El agente genera una respuesta profesional, rápida y que incentiva la compra.</div>
+    <div style="margin-top:16px" class="field">
+      <label class="label">PREGUNTA DEL COMPRADOR</label>
+      <textarea id="p-pregunta" style="min-height:100px" placeholder="ej. ¿El organizador viene en color negro? ¿Cuánto tarda en llegar a Monterrey? ¿Tiene garantía?"></textarea>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label class="label">PRODUCTO</label>
+        <input id="p-producto" type="text" placeholder="ej. Organizador de cajones"/>
+      </div>
+      <div class="field">
+        <label class="label">TIEMPO DE ENVÍO REAL</label>
+        <input id="p-envio" type="text" placeholder="ej. 3-5 días hábiles"/>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-preguntas" onclick="runPreguntas()">GENERAR RESPUESTA</button>
+    <div class="loading" id="load-preguntas"><span class="pulse"></span><span class="spin" id="load-preguntas-txt">Redactando respuesta profesional...</span></div>
+    <div class="err" id="err-preguntas">Error al conectar. Intenta de nuevo.</div>
+
+    <div class="result-box" id="res-preguntas">
+      <div class="result-header"><span>RESPUESTA PARA EL COMPRADOR</span></div>
+      <div class="result-body" id="res-preguntas-body"></div>
+    </div>
+  </div>
+
+  <!-- PANEL 3: ANÁLISIS DE PRODUCTO -->
+  <div class="panel" id="panel-analisis">
+    <div class="field">
+      <label class="label">PRODUCTO A ANALIZAR</label>
+      <input id="a-producto" type="text" placeholder="ej. Comedero automático para gatos"/>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label class="label">PRECIO AL QUE LO COMPRARÍAS</label>
+        <input id="a-costo" type="number" placeholder="180"/>
+      </div>
+      <div class="field">
+        <label class="label">PRECIO DE VENTA ESTIMADO</label>
+        <input id="a-venta" type="number" placeholder="350"/>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">PROVEEDOR / ORIGEN (opcional)</label>
+      <input id="a-proveedor" type="text" placeholder="ej. Proveedor local CDMX, AliExpress, etc."/>
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-analisis" onclick="runAnalisis()">ANALIZAR POTENCIAL</button>
+    <div class="loading" id="load-analisis"><span class="pulse"></span><span class="spin" id="load-analisis-txt">Analizando viabilidad...</span></div>
+    <div class="err" id="err-analisis">Error al conectar. Intenta de nuevo.</div>
+
+    <div class="result-box" id="res-analisis">
+      <div class="result-header"><span>ANÁLISIS DE VIABILIDAD</span></div>
+      <div class="result-body" id="res-analisis-body"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const tabs = ['listing','preguntas','analisis'];
+  const idx = tabs.indexOf(id);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+}
+
+const phrases = {
+  listing: ['Analizando mercado de ML...','Construyendo título SEO...','Redactando descripción...','Optimizando keywords...'],
+  preguntas: ['Analizando la pregunta...','Redactando respuesta profesional...','Revisando tono de venta...'],
+  analisis: ['Calculando márgenes...','Evaluando competencia...','Analizando demanda estimada...','Generando veredicto...']
+};
+
+function startLoad(key) {
+  let i = 0;
+  const el = document.getElementById('load-'+key+'-txt');
+  if(el) el.textContent = phrases[key][0];
+  return setInterval(() => {
+    i = (i+1) % phrases[key].length;
+    if(el) el.textContent = phrases[key][i];
+  }, 1300);
+}
+
+async function callAPI(prompt, systemPrompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1500,
+      system: systemPrompt,
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const data = await res.json();
+  const raw = data.content.map(b=>b.text||'').join('');
+  return raw.replace(/```json|```/g,'').trim();
+}
+
+function copyText(txt, btn) {
+  navigator.clipboard.writeText(txt).then(()=>{
+    btn.textContent='copiado ✓';
+    btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='copiar';btn.classList.remove('copied')},2000);
+  });
+}
+
+function scoreColor(n) {
+  if(n>=75) return '#1a7a4a';
+  if(n>=50) return '#f5a623';
+  return '#c0392b';
+}
+
+// ---- LISTING ----
+async function runListing() {
+  const nombre = document.getElementById('l-nombre').value.trim();
+  const cat = document.getElementById('l-categoria').value;
+  const precio = document.getElementById('l-precio').value;
+  const features = document.getElementById('l-features').value.trim();
+  const dif = document.getElementById('l-diferencial').value.trim();
+  if(!nombre || !cat || !features) return alert('Completa nombre, categoría y características.');
+
+  const btn = document.getElementById('btn-listing');
+  btn.disabled=true;
+  document.getElementById('load-listing').style.display='block';
+  document.getElementById('res-listing').style.display='none';
+  document.getElementById('err-listing').style.display='none';
+  const interval = startLoad('listing');
+
+  const system = `Eres un experto en optimización de listings para Mercado Libre México con 10 años de experiencia. Conoces el algoritmo de búsqueda de ML, las mejores prácticas de títulos, descripciones y palabras clave. Siempre respondes en JSON válido sin markdown.`;
+
+  const prompt = `Crea un listing optimizado para Mercado Libre México para este producto:
+Nombre: ${nombre}
+Categoría: ${cat}
+Precio: $${precio} MXN
+Características: ${features}
+Diferencial: ${dif || 'ninguno especificado'}
+
+Responde SOLO en JSON con esta estructura exacta:
+{
+  "titulo": "título optimizado máximo 60 caracteres con keywords principales primero",
+  "subtitulo": "título alternativo más descriptivo máximo 80 caracteres",
+  "keywords_principales": ["keyword1","keyword2","keyword3","keyword4","keyword5"],
+  "descripcion_corta": "descripción de 2-3 oraciones para la parte superior del listing",
+  "bullets": ["beneficio/característica 1","beneficio/característica 2","beneficio/característica 3","beneficio/característica 4","beneficio/característica 5"],
+  "descripcion_larga": "descripción completa de 120-150 palabras optimizada para conversión y SEO de ML",
+  "preguntas_frecuentes": [{"pregunta":"pregunta común del comprador","respuesta":"respuesta persuasiva"}],
+  "tip_precio": "consejo sobre si el precio es competitivo basado en el mercado de ML"
+}`;
+
+  try {
+    const raw = await callAPI(prompt, system);
+    const d = JSON.parse(raw);
+    renderListing(d, nombre);
+  } catch(e) {
+    document.getElementById('err-listing').style.display='block';
+    console.error(e);
+  } finally {
+    clearInterval(interval);
+    document.getElementById('load-listing').style.display='none';
+    btn.disabled=false;
+  }
+}
+
+function renderListing(d, nombre) {
+  const body = document.getElementById('res-listing-body');
+  const kwHtml = (d.keywords_principales||[]).map(k=>`<span class="badge badge-neutral">${k}</span>`).join('');
+  const bullHtml = (d.bullets||[]).map((b,i)=>`<div style="display:flex;gap:8px;margin-bottom:6px"><span style="color:var(--yellow2);font-family:var(--mono);font-size:12px;min-width:16px">${i+1}.</span><span style="font-size:14px;color:var(--text)">${b}</span></div>`).join('');
+  const faqHtml = (d.preguntas_frecuentes||[]).map(f=>`<div style="margin-bottom:10px"><div style="font-size:13px;color:var(--muted);margin-bottom:3px">P: ${f.pregunta}</div><div style="font-size:13px;color:var(--text)">R: ${f.respuesta}</div></div>`).join('');
+
+  body.innerHTML = `
+    <div class="field-out">
+      <div class="field-out-label" style="display:flex;justify-content:space-between">TÍTULO PRINCIPAL <button class="copy-btn" onclick="copyText('${(d.titulo||'').replace(/'/g,"\\'")}',this)">copiar</button></div>
+      <div class="field-out-val mono" style="font-size:15px;color:var(--text)">${d.titulo}</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px;font-family:var(--mono)">${(d.titulo||'').length}/60 caracteres</div>
+    </div>
+    <div class="field-out">
+      <div class="field-out-label">TÍTULO ALTERNATIVO</div>
+      <div class="field-out-val mono">${d.subtitulo}</div>
+    </div>
+    <div class="field-out">
+      <div class="field-out-label">KEYWORDS PARA INCLUIR EN DESCRIPCIÓN</div>
+      <div style="margin-top:4px">${kwHtml}</div>
+    </div>
+    <div class="field-out">
+      <div class="field-out-label">DESCRIPCIÓN CORTA (encabezado)</div>
+      <div class="field-out-val">${d.descripcion_corta}</div>
+    </div>
+    <div class="field-out">
+      <div class="field-out-label">BULLETS / PUNTOS CLAVE</div>
+      <div style="margin-top:8px">${bullHtml}</div>
+    </div>
+    <div class="field-out">
+      <div class="field-out-label" style="display:flex;justify-content:space-between">DESCRIPCIÓN COMPLETA <button class="copy-btn" onclick="copyText(this.closest('.field-out').querySelector('.field-out-val').textContent,this)">copiar</button></div>
+      <div class="field-out-val" style="white-space:pre-wrap">${d.descripcion_larga}</div>
+    </div>
+    ${faqHtml ? `<div class="field-out"><div class="field-out-label">PREGUNTAS FRECUENTES ANTICIPADAS</div><div style="margin-top:8px">${faqHtml}</div></div>` : ''}
+    <div class="tip">💡 ${d.tip_precio}</div>
+  `;
+  document.getElementById('res-listing').style.display='block';
+}
+
+// ---- PREGUNTAS ----
+async function runPreguntas() {
+  const pregunta = document.getElementById('p-pregunta').value.trim();
+  const producto = document.getElementById('p-producto').value.trim();
+  const envio = document.getElementById('p-envio').value.trim();
+  if(!pregunta || !producto) return alert('Completa la pregunta y el nombre del producto.');
+
+  const btn = document.getElementById('btn-preguntas');
+  btn.disabled=true;
+  document.getElementById('load-preguntas').style.display='block';
+  document.getElementById('res-preguntas').style.display='none';
+  document.getElementById('err-preguntas').style.display='none';
+  const interval = startLoad('preguntas');
+
+  const system = `Eres un vendedor experto de Mercado Libre México con excelente reputación. Sabes que responder rápido y con calidez aumenta la conversión. Respondes siempre en JSON válido sin markdown.`;
+
+  const prompt = `Un comprador hizo esta pregunta en mi publicación de Mercado Libre:
+
+Pregunta: "${pregunta}"
+Producto: ${producto}
+Tiempo de envío: ${envio || 'no especificado'}
+
+Genera una respuesta profesional, cálida y orientada a cerrar la venta.
+
+Responde SOLO en JSON:
+{
+  "respuesta_principal": "respuesta completa lista para copiar y pegar en ML, máximo 3 párrafos cortos",
+  "tono": "descripción del tono usado",
+  "elementos_clave": ["elemento que incluye la respuesta 1","elemento 2","elemento 3"],
+  "alerta": "si hay algo que el vendedor debería verificar o aclarar antes de enviar, mencionarlo aquí, si no hay nada escribe 'ninguna'",
+  "variante_corta": "versión de la respuesta en máximo 2 oraciones por si el vendedor quiere algo más breve"
+}`;
+
+  try {
+    const raw = await callAPI(prompt, system);
+    const d = JSON.parse(raw);
+    renderPreguntas(d);
+  } catch(e) {
+    document.getElementById('err-preguntas').style.display='block';
+    console.error(e);
+  } finally {
+    clearInterval(interval);
+    document.getElementById('load-preguntas').style.display='none';
+    btn.disabled=false;
+  }
+}
+
+function renderPreguntas(d) {
+  const elemHtml = (d.elementos_clave||[]).map(e=>`<span class="badge badge-green">${e}</span>`).join('');
+  const alertColor = d.alerta==='ninguna' ? 'var(--green)' : 'var(--red)';
+  document.getElementById('res-preguntas-body').innerHTML = `
+    <div class="field-out">
+      <div class="field-out-label" style="display:flex;justify-content:space-between">RESPUESTA LISTA PARA ENVIAR <button class="copy-btn" onclick="copyText(this.closest('.field-out').querySelector('.field-out-val').textContent,this)">copiar</button></div>
+      <div class="field-out-val" style="white-space:pre-wrap">${d.respuesta_principal}</div>
+    </div>
+    <div class="field-out">
+      <div class="field-out-label">VERSIÓN CORTA</div>
+      <div class="field-out-val">${d.variante_corta}</div>
+    </div>
+    <div class="field-out">
+      <div class="field-out-label">TONO · ELEMENTOS INCLUIDOS</div>
+      <div style="margin-top:4px;margin-bottom:6px;font-size:12px;color:var(--muted)">${d.tono}</div>
+      ${elemHtml}
+    </div>
+    ${d.alerta !== 'ninguna' ? `<div class="tip" style="border-left-color:${alertColor}">⚠️ ${d.alerta}</div>` : ''}
+  `;
+  document.getElementById('res-preguntas').style.display='block';
+}
+
+// ---- ANÁLISIS ----
+async function runAnalisis() {
+  const producto = document.getElementById('a-producto').value.trim();
+  const costo = document.getElementById('a-costo').value;
+  const venta = document.getElementById('a-venta').value;
+  const proveedor = document.getElementById('a-proveedor').value.trim();
+  if(!producto || !costo || !venta) return alert('Completa producto, costo y precio de venta.');
+
+  const margen = ((venta - costo) / venta * 100).toFixed(1);
+  const ganancia = (venta - costo).toFixed(0);
+  const comisionML = (venta * 0.15).toFixed(0);
+  const neto = (venta - costo - Number(comisionML)).toFixed(0);
+
+  const btn = document.getElementById('btn-analisis');
+  btn.disabled=true;
+  document.getElementById('load-analisis').style.display='block';
+  document.getElementById('res-analisis').style.display='none';
+  document.getElementById('err-analisis').style.display='none';
+  const interval = startLoad('analisis');
+
+  const system = `Eres un analista de mercado especializado en ecommerce mexicano y Mercado Libre. Conoces tendencias de demanda, niveles de competencia y estrategias de pricing. Siempre respondes en JSON válido sin markdown ni texto extra.`;
+
+  const prompt = `Analiza la viabilidad de vender este producto en Mercado Libre México como dropshipping:
+
+Producto: ${producto}
+Costo al proveedor: $${costo} MXN
+Precio de venta propuesto: $${venta} MXN
+Margen bruto calculado: ${margen}%
+Ganancia bruta por venta: $${ganancia} MXN
+Comisión estimada ML (~15%): $${comisionML} MXN
+Ganancia neta estimada por venta: $${neto} MXN
+Proveedor/origen: ${proveedor || 'no especificado'}
+
+Responde SOLO en JSON:
+{
+  "score_viabilidad": número del 0 al 100,
+  "veredicto": "PUBLICAR" o "INVESTIGAR MÁS" o "EVITAR",
+  "demanda_estimada": "Alta / Media / Baja con breve explicación",
+  "competencia_en_ml": "Alta / Media / Baja con breve explicación",
+  "precio_competitivo": true o false,
+  "rango_precio_recomendado": "rango en MXN basado en ML",
+  "ventas_mensuales_estimadas": "estimado conservador de órdenes/mes si se posiciona bien",
+  "ingreso_neto_mensual_estimado": "rango en MXN considerando el estimado de ventas",
+  "fortalezas": ["fortaleza 1","fortaleza 2"],
+  "riesgos": ["riesgo 1","riesgo 2"],
+  "recomendacion_accion": "qué debe hacer el vendedor ahora mismo en 2-3 oraciones concretas"
+}`;
+
+  try {
+    const raw = await callAPI(prompt, system);
+    const d = JSON.parse(raw);
+    renderAnalisis(d, {producto, costo, venta, margen, ganancia, comisionML, neto});
+  } catch(e) {
+    document.getElementById('err-analisis').style.display='block';
+    console.error(e);
+  } finally {
+    clearInterval(interval);
+    document.getElementById('load-analisis').style.display='none';
+    btn.disabled=false;
+  }
+}
+
+function renderAnalisis(d, nums) {
+  const score = Math.min(100, Math.max(0, parseInt(d.score_viabilidad)||50));
+  const vColor = scoreColor(score);
+  const vBadge = d.veredicto==='PUBLICAR' ? 'badge-green' : d.veredicto==='EVITAR' ? 'badge-red' : 'badge-blue';
+  const fortHtml = (d.fortalezas||[]).map(f=>`<div style="display:flex;gap:8px;margin-bottom:6px"><span style="color:var(--green);font-size:12px">✓</span><span style="font-size:13px">${f}</span></div>`).join('');
+  const riskHtml = (d.riesgos||[]).map(r=>`<div style="display:flex;gap:8px;margin-bottom:6px"><span style="color:var(--red);font-size:12px">▲</span><span style="font-size:13px">${r}</span></div>`).join('');
+
+  document.getElementById('res-analisis-body').innerHTML = `
+    <div class="field-out">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:11px;font-family:var(--mono);color:var(--dim);margin-bottom:4px;letter-spacing:0.08em">SCORE DE VIABILIDAD</div>
+          <div style="font-size:40px;font-weight:500;font-family:var(--mono);color:${vColor}">${score}</div>
+        </div>
+        <div style="flex:1">
+          <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-bottom:8px">
+            <div style="height:100%;width:${score}%;background:${vColor};border-radius:4px;transition:width 0.6s"></div>
+          </div>
+          <span class="badge ${vBadge}" style="font-size:12px">${d.veredicto}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-out">
+      <div class="field-out-label">MATEMÁTICAS REALES POR VENTA</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px">
+        <div style="background:var(--bg3);border-radius:6px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">COSTO</div>
+          <div style="font-size:15px;font-weight:500">$${nums.costo}</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:6px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">VENTA</div>
+          <div style="font-size:15px;font-weight:500">$${nums.venta}</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:6px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">COMISIÓN ML</div>
+          <div style="font-size:15px;font-weight:500;color:var(--red)">-$${nums.comisionML}</div>
+        </div>
+        <div style="background:var(--green-bg);border-radius:6px;padding:10px;text-align:center;border:1px solid #c3e8d3">
+          <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-bottom:3px">NETO</div>
+          <div style="font-size:15px;font-weight:500;color:var(--green)">$${nums.neto}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-out">
+      <div class="field-out-label">MERCADO</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+        <div><div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">DEMANDA ESTIMADA</div><div style="font-size:13px">${d.demanda_estimada}</div></div>
+        <div><div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">COMPETENCIA EN ML</div><div style="font-size:13px">${d.competencia_en_ml}</div></div>
+        <div><div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">PRECIO RECOMENDADO</div><div style="font-size:13px">${d.rango_precio_recomendado}</div></div>
+        <div><div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">PRECIO COMPETITIVO</div><div style="font-size:13px">${d.precio_competitivo ? '✓ Sí':'✗ Revisar'}</div></div>
+      </div>
+    </div>
+
+    <div class="field-out">
+      <div class="field-out-label">POTENCIAL MENSUAL</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+        <div><div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">VENTAS ESTIMADAS / MES</div><div style="font-size:14px;font-weight:500">${d.ventas_mensuales_estimadas}</div></div>
+        <div><div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:3px">INGRESO NETO / MES</div><div style="font-size:14px;font-weight:500;color:var(--green)">${d.ingreso_neto_mensual_estimado}</div></div>
+      </div>
+    </div>
+
+    <div class="field-out">
+      <div class="field-out-label">FORTALEZAS</div>
+      <div style="margin-top:8px">${fortHtml}</div>
+    </div>
+    <div class="field-out">
+      <div class="field-out-label">RIESGOS</div>
+      <div style="margin-top:8px">${riskHtml}</div>
+    </div>
+    <div class="tip">→ ${d.recomendacion_accion}</div>
+  `;
+  document.getElementById('res-analisis').style.display='block';
+}
+</script>
+</body>
+</html>
